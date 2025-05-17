@@ -6,21 +6,27 @@
             "use": "@vercel/python",
             "config": {
                 "runtime": "python3.12",
-                "maxLambdaSize": "15mb"
+                "maxLambdaSize": "15mb",
+                "maxDuration": 10
             }
         }
     ],
     "routes": [
         {
+            "src": "/static/(.*)",
+            "dest": "/static/$1"
+        },
+        {
             "src": "/api/(.*)",
-            "dest": "api/index.py"
+            "dest": "/api/index.py"
         },
         {
             "src": "/(.*)",
-            "dest": "api/index.py"
+            "dest": "/api/index.py"
         }
     ],
     "env": {
-        "PYTHONPATH": "."
+        "PYTHONPATH": ".",
+        "PYTHONUNBUFFERED": "1"
     }
 } 
