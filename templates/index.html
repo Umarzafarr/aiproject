@@ -394,7 +394,7 @@
             const formData = new FormData();
             formData.append('file', file);
 
-            fetch('/predict', {
+            fetch('/api/predict', {
                 method: 'POST',
                 body: formData
             })
