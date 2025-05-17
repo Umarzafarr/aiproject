@@ -394,7 +394,10 @@
             const formData = new FormData();
             formData.append('file', file);
 
-            fetch('/api/predict', {
+            // Get the base URL dynamically
+            const baseUrl = window.location.origin;
+            
+            fetch(`${baseUrl}/api/predict`, {
                 method: 'POST',
                 body: formData
             })

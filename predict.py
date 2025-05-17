@@ -35,27 +35,22 @@ class SimpleCNN(nn.Module):
         x = self.fc2(x)
         return x
 
-def load_model():
-    """Load the trained PyTorch model."""
-    # Check if model file exists
-    if not os.path.exists('model.pth'):
-        # If no model exists, create a basic one
-        model = SimpleCNN()
-        torch.save(model.state_dict(), 'model.pth')
-        print("Created new model as no existing model was found.")
-    
-    try:
-        # Try loading the model
-        model = SimpleCNN()
-        model.load_state_dict(torch.load('model.pth', map_location=torch.device('cpu')))
-    except Exception as e:
-        print(f"Error loading model: {str(e)}")
-        print("Creating new model instead.")
-        model = SimpleCNN()
-        torch.save(model.state_dict(), 'model.pth')
-    
-    model.eval()  # Set to evaluation mode
-    return model
+# Global model variable
+_model = None
+
+def get_model():
+    """Get or initialize the model."""
+    global _model
+    if _model is None:
+        _model = SimpleCNN()
+        model_path = os.path.join(os.path.dirname(__file__), 'model.pth')
+        if os.path.exists(model_path):
+            try:
+                _model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
+            except Exception as e:
+                print(f"Error loading model: {str(e)}")
+        _model.eval()
+    return _model
 
 def predict_image(image_path):
     """
@@ -68,12 +63,12 @@ def predict_image(image_path):
         str: Predicted class name
     """
     try:
-        # Load and check if the image exists
+        # Check if image exists
         if not os.path.exists(image_path):
             raise FileNotFoundError(f"Image file not found: {image_path}")
         
         # Load the model
-        model = load_model()
+        model = get_model()
         
         # Open and preprocess the image
         image = Image.open(image_path).convert('RGB')
@@ -91,7 +86,6 @@ def predict_image(image_path):
         raise Exception(f"Error during prediction: {str(e)}")
 
 if __name__ == "__main__":
-    # Example usage
     import sys
     
     if len(sys.argv) != 2:

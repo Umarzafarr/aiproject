@@ -1,31 +1,28 @@
-from flask import Flask, request, render_template, jsonify
+from flask import Flask, request, render_template, jsonify, send_from_directory
 from werkzeug.utils import secure_filename
 import os
 import sys
 import base64
+import tempfile
 
 # Add the parent directory to Python path to import predict
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from predict import predict_image
 
-app = Flask(__name__, template_folder='../templates')
+app = Flask(__name__)
 
-# Configure upload folder
-UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'uploads')
+# Configure allowed extensions
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
-
-# Create upload folder if it doesn't exist
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
-
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-@app.route('/')
-def home():
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve(path):
+    if path != "" and os.path.exists(os.path.join('templates', path)):
+        return send_from_directory('templates', path)
     return render_template('index.html')
 
 @app.route('/api/predict', methods=['POST'])
@@ -41,33 +38,29 @@ def predict():
         return jsonify({'error': 'Invalid file type. Please upload a PNG or JPEG image.'}), 400
 
     try:
-        # Save the file temporarily
-        filename = secure_filename(file.filename)
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(filepath)
+        # Create a temporary file
+        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+            file.save(temp_file.name)
+            
+            # Get prediction
+            prediction = predict_image(temp_file.name)
 
-        # Get prediction
-        prediction = predict_image(filepath)
+            # Read the image file and convert to base64
+            with open(temp_file.name, 'rb') as img_file:
+                img_data = base64.b64encode(img_file.read()).decode('utf-8')
 
-        # Read the image file and convert to base64
-        with open(filepath, 'rb') as img_file:
-            img_data = base64.b64encode(img_file.read()).decode('utf-8')
+            # Clean up
+            os.unlink(temp_file.name)
 
-        # Clean up
-        os.remove(filepath)
-
-        return jsonify({
-            'success': True,
-            'prediction': prediction,
-            'image': img_data
-        })
+            return jsonify({
+                'success': True,
+                'prediction': prediction,
+                'image': img_data
+            })
 
     except Exception as e:
-        # Clean up in case of error
-        if os.path.exists(filepath):
-            os.remove(filepath)
         return jsonify({'error': str(e)}), 500
 
 # For local development
 if __name__ == '__main__':
-    app.run() 
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 3000))) 
