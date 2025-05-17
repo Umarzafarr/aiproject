@@ -3,6 +3,7 @@ import torch.nn as nn
 from torchvision import transforms
 from PIL import Image
 import os
+import io
 
 # Define the classes
 CLASSES = ['apple', 'banana', 'orange']
@@ -46,9 +47,17 @@ def get_model():
         model_path = os.path.join(os.path.dirname(__file__), 'model.pth')
         if os.path.exists(model_path):
             try:
-                _model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
+                # Load with newer PyTorch version compatibility
+                state_dict = torch.load(model_path, map_location=torch.device('cpu'))
+                # Handle potential version differences
+                if isinstance(state_dict, dict):
+                    if 'state_dict' in state_dict:
+                        state_dict = state_dict['state_dict']
+                _model.load_state_dict(state_dict)
             except Exception as e:
                 print(f"Error loading model: {str(e)}")
+                # Initialize with random weights if loading fails
+                _model = SimpleCNN()
         _model.eval()
     return _model
 
@@ -71,8 +80,9 @@ def predict_image(image_path):
         model = get_model()
         
         # Open and preprocess the image
-        image = Image.open(image_path).convert('RGB')
-        image_tensor = transform(image).unsqueeze(0)  # Add batch dimension
+        with Image.open(image_path).convert('RGB') as image:
+            # Ensure image is in RGB mode
+            image_tensor = transform(image).unsqueeze(0)  # Add batch dimension
         
         # Make prediction
         with torch.no_grad():
