@@ -1,0 +1,106 @@
+import torch
+import torch.nn as nn
+from torchvision import transforms
+from PIL import Image
+import os
+
+# Define the classes
+CLASSES = ['apple', 'banana', 'orange']
+
+# Define the image transformations
+transform = transforms.Compose([
+    transforms.Resize((100, 100)),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], 
+                       std=[0.229, 0.224, 0.225])
+])
+
+class SimpleCNN(nn.Module):
+    def __init__(self):
+        super(SimpleCNN, self).__init__()
+        self.conv1 = nn.Conv2d(3, 16, 3, padding=1)
+        self.conv2 = nn.Conv2d(16, 32, 3, padding=1)
+        self.conv3 = nn.Conv2d(32, 64, 3, padding=1)
+        self.pool = nn.MaxPool2d(2, 2)
+        self.fc1 = nn.Linear(64 * 12 * 12, 512)
+        self.fc2 = nn.Linear(512, 3)  # 3 classes
+        self.relu = nn.ReLU()
+
+    def forward(self, x):
+        x = self.pool(self.relu(self.conv1(x)))
+        x = self.pool(self.relu(self.conv2(x)))
+        x = self.pool(self.relu(self.conv3(x)))
+        x = x.view(-1, 64 * 12 * 12)
+        x = self.relu(self.fc1(x))
+        x = self.fc2(x)
+        return x
+
+def load_model():
+    """Load the trained PyTorch model."""
+    # Check if model file exists
+    if not os.path.exists('model.pth'):
+        # If no model exists, create a basic one
+        model = SimpleCNN()
+        torch.save(model.state_dict(), 'model.pth')
+        print("Created new model as no existing model was found.")
+    
+    try:
+        # Try loading the model
+        model = SimpleCNN()
+        model.load_state_dict(torch.load('model.pth', map_location=torch.device('cpu')))
+    except Exception as e:
+        print(f"Error loading model: {str(e)}")
+        print("Creating new model instead.")
+        model = SimpleCNN()
+        torch.save(model.state_dict(), 'model.pth')
+    
+    model.eval()  # Set to evaluation mode
+    return model
+
+def predict_image(image_path):
+    """
+    Predict the class of an image.
+    
+    Args:
+        image_path (str): Path to the image file
+        
+    Returns:
+        str: Predicted class name
+    """
+    try:
+        # Load and check if the image exists
+        if not os.path.exists(image_path):
+            raise FileNotFoundError(f"Image file not found: {image_path}")
+        
+        # Load the model
+        model = load_model()
+        
+        # Open and preprocess the image
+        image = Image.open(image_path).convert('RGB')
+        image_tensor = transform(image).unsqueeze(0)  # Add batch dimension
+        
+        # Make prediction
+        with torch.no_grad():
+            outputs = model(image_tensor)
+            _, predicted = torch.max(outputs, 1)
+            predicted_class = CLASSES[predicted.item()]
+            
+        return predicted_class
+        
+    except Exception as e:
+        raise Exception(f"Error during prediction: {str(e)}")
+
+if __name__ == "__main__":
+    # Example usage
+    import sys
+    
+    if len(sys.argv) != 2:
+        print("Usage: python predict.py <image_path>")
+        sys.exit(1)
+        
+    image_path = sys.argv[1]
+    try:
+        prediction = predict_image(image_path)
+        print(f"Predicted class: {prediction}")
+    except Exception as e:
+        print(f"Error: {str(e)}") 

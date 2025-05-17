@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Fruit Classifier</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4CAF50;
+            --error-color: #f44336;
+            --success-color: #4CAF50;
+            --text-color: #2c3e50;
+            --border-radius: 15px;
+            --box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 100%);
+            color: var(--text-color);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #eee;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            color: var(--text-color);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+            margin-bottom: 20px;
+        }
+
+        .features {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .feature {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            flex: 1;
+            min-width: 200px;
+            text-align: center;
+        }
+
+        .feature i {
+            font-size: 24px;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .upload-container {
+            position: relative;
+            margin: 30px 0;
+        }
+
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: var(--border-radius);
+            padding: 40px 20px;
+            text-align: center;
+            background: #fafafa;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area.dragover {
+            background: #e8f5e9;
+            border-color: var(--primary-color);
+            transform: scale(1.02);
+        }
+
+        .upload-area i {
+            font-size: 48px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .file-input {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .result-container {
+            display: none;
+            margin-top: 40px;
+            padding: 30px;
+            border-radius: var(--border-radius);
+            background: #fff;
+            box-shadow: var(--box-shadow);
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            align-items: start;
+        }
+
+        .image-section {
+            text-align: center;
+        }
+
+        .result-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: var(--box-shadow);
+            margin-bottom: 20px;
+        }
+
+        .details-section {
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .prediction-header {
+            color: var(--primary-color);
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .prediction-details {
+            margin-bottom: 20px;
+        }
+
+        .detail-item {
+            margin-bottom: 15px;
+        }
+
+        .detail-label {
+            font-weight: 500;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            font-size: 1.1em;
+            color: var(--text-color);
+        }
+
+        .fruit-info {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .error-message {
+            display: none;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+            background-color: #ffebee;
+            color: var(--error-color);
+            text-align: center;
+            box-shadow: var(--box-shadow);
+        }
+
+        .loading-spinner {
+            display: none;
+            margin: 20px auto;
+            width: 50px;
+            height: 50px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .instructions {
+            text-align: center;
+            color: #666;
+            margin: 20px 0;
+            font-size: 1em;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .result-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .features {
+                flex-direction: column;
+            }
+            
+            .feature {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>AI Fruit Classifier</h1>
+            <p class="subtitle">Advanced machine learning model for fruit classification</p>
+            
+            <div class="features">
+                <div class="feature">
+                    <i>🎯</i>
+                    <h3>High Accuracy</h3>
+                    <p>Trained on thousands of fruit images</p>
+                </div>
+                <div class="feature">
+                    <i>⚡</i>
+                    <h3>Real-time</h3>
+                    <p>Instant predictions</p>
+                </div>
+                <div class="feature">
+                    <i>📱</i>
+                    <h3>Mobile Ready</h3>
+                    <p>Works on all devices</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="upload-container">
+            <div class="upload-area" id="dropZone">
+                <i>📸</i>
+                <h3>Upload Your Fruit Image</h3>
+                <p>Drag & drop your image here or click to select</p>
+                <p class="instructions">Supported formats: JPG, JPEG, PNG • Max size: 16MB</p>
+                <input type="file" class="file-input" accept=".jpg,.jpeg,.png" id="fileInput">
+            </div>
+        </div>
+
+        <div class="loading-spinner" id="loadingSpinner"></div>
+        <div class="error-message" id="errorMessage"></div>
+
+        <div class="result-container" id="resultContainer">
+            <h2 class="prediction-header">Analysis Results</h2>
+            <div class="result-grid">
+                <div class="image-section">
+                    <h3>Uploaded Image</h3>
+                    <img id="uploadedImage" alt="Uploaded fruit">
+                </div>
+                <div class="details-section">
+                    <div class="prediction-details">
+                        <div class="detail-item">
+                            <div class="detail-label">Predicted Fruit</div>
+                            <div class="detail-value" id="predictionResult">-</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Classification Time</div>
+                            <div class="detail-value" id="classificationTime">-</div>
+                        </div>
+                    </div>
+                    <div class="fruit-info" id="fruitInfo">
+                        <h3>Fruit Information</h3>
+                        <div id="fruitDescription"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const errorMessage = document.getElementById('errorMessage');
+        const resultContainer = document.getElementById('resultContainer');
+        const uploadedImage = document.getElementById('uploadedImage');
+        const predictionResult = document.getElementById('predictionResult');
+        const classificationTime = document.getElementById('classificationTime');
+        const fruitDescription = document.getElementById('fruitDescription');
+
+        const fruitInfo = {
+            'apple': {
+                description: 'Apples are crisp, round fruits known for their sweet-tart flavor and numerous health benefits. They are rich in fiber, vitamins, and antioxidants.',
+                nutrition: 'Rich in Vitamin C, fiber, and antioxidants'
+            },
+            'banana': {
+                description: 'Bananas are elongated, curved fruits with a soft, creamy flesh. They are naturally sweet and an excellent source of quick energy.',
+                nutrition: 'High in potassium, Vitamin B6, and fiber'
+            },
+            'orange': {
+                description: 'Oranges are citrus fruits known for their juicy segments and refreshing taste. They are famous for their high Vitamin C content.',
+                nutrition: 'Excellent source of Vitamin C, fiber, and folate'
+            }
+        };
+
+        // Drag and drop handlers
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+            document.body.addEventListener(eventName, preventDefaults, false);
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, unhighlight, false);
+        });
+
+        dropZone.addEventListener('drop', handleDrop, false);
+        fileInput.addEventListener('change', handleFileSelect, false);
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        function highlight(e) {
+            dropZone.classList.add('dragover');
+        }
+
+        function unhighlight(e) {
+            dropZone.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        }
+
+        function handleFileSelect(e) {
+            const files = e.target.files;
+            handleFiles(files);
+        }
+
+        function handleFiles(files) {
+            if (files.length > 0) {
+                const file = files[0];
+                if (file.type.startsWith('image/')) {
+                    uploadFile(file);
+                } else {
+                    showError('Please upload an image file (PNG or JPEG)');
+                }
+            }
+        }
+
+        function uploadFile(file) {
+            // Reset UI
+            errorMessage.style.display = 'none';
+            resultContainer.style.display = 'none';
+            loadingSpinner.style.display = 'block';
+
+            const startTime = new Date();
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetch('/predict', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                loadingSpinner.style.display = 'none';
+                if (data.error) {
+                    showError(data.error);
+                } else {
+                    // Calculate processing time
+                    const endTime = new Date();
+                    const processingTime = (endTime - startTime) / 1000;
+                    
+                    // Display results
+                    uploadedImage.src = `data:image/jpeg;base64,${data.image}`;
+                    predictionResult.textContent = data.prediction;
+                    classificationTime.textContent = `${processingTime.toFixed(2)} seconds`;
+                    
+                    // Display fruit information
+                    const fruit = data.prediction.toLowerCase();
+                    if (fruitInfo[fruit]) {
+                        fruitDescription.innerHTML = `
+                            <p><strong>Description:</strong> ${fruitInfo[fruit].description}</p>
+                            <p><strong>Nutrition:</strong> ${fruitInfo[fruit].nutrition}</p>
+                        `;
+                    }
+                    
+                    resultContainer.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                loadingSpinner.style.display = 'none';
+                showError('An error occurred during prediction. Please try again.');
+                console.error('Error:', error);
+            });
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+        }
+    </script>
+</body>
+</html> 
