@@ -6,5 +6,5 @@ services:
     startCommand: gunicorn --bind 0.0.0.0:$PORT api.index:app
     envVars:
       - key: PYTHON_VERSION
-        value: 3.10.13
+        value: 3.11.11
     plan: free 
