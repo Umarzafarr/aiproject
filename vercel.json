@@ -3,30 +3,13 @@
     "builds": [
         {
             "src": "api/index.py",
-            "use": "@vercel/python",
-            "config": {
-                "runtime": "python3.12",
-                "maxLambdaSize": "50mb"
-            }
+            "use": "@vercel/python"
         }
     ],
     "routes": [
         {
             "src": "/(.*)",
             "dest": "api/index.py"
-        },
-        {
-            "src": "/static/(.*)",
-            "dest": "/static/$1",
-            "headers": {
-                "cache-control": "public, max-age=31536000, immutable",
-                "Access-Control-Allow-Origin": "*"
-            }
         }
-    ],
-    "env": {
-        "PYTHONPATH": ".",
-        "FLASK_ENV": "production",
-        "FLASK_SECRET_KEY": "generate-a-secure-secret-key-and-set-in-vercel-dashboard"
-    }
+    ]
 } 
