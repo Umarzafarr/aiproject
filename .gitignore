@@ -4,22 +4,49 @@ __pycache__/
 *$py.class
 *.so
 .Python
-env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
 venv/
-.env
-.venv
 ENV/
+
+# IDE
+.vscode/
+.idea/
+
+# Application specific
+uploads/
+temp_uploads/
+*.h5
+.env
+
+# OS specific
+.DS_Store
+*.swp
+*.swo
+
+# Keep these files
+!model.pth
 
 # Vercel
 .vercel
 
 # Project specific
-uploads/
 *.pth
-.DS_Store
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo 
+# Keep these files
+!requirements.txt 
