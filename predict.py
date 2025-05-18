@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
-from torchvision import transforms
+import torchvision.models as models
+import torchvision.transforms as transforms
 from PIL import Image
 import os
 
@@ -9,34 +10,38 @@ CLASSES = ['apple', 'banana', 'orange']
 
 # Define the image transformations
 transform = transforms.Compose([
-    transforms.Resize((64, 64)),  # Smaller size for faster processing
+    transforms.Resize((100, 100)),
     transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406], 
-                       std=[0.229, 0.224, 0.225])
+    transforms.Normalize(
+        mean=[0.485, 0.456, 0.406],
+        std=[0.229, 0.224, 0.225]
+    )
 ])
 
-class SimpleNet(nn.Module):
-    def __init__(self):
-        super(SimpleNet, self).__init__()
-        self.conv = nn.Conv2d(3, 16, 3, padding=1)
-        self.pool = nn.MaxPool2d(2, 2)
-        self.fc = nn.Linear(16 * 32 * 32, 3)
+class CustomResNet(nn.Module):
+    def __init__(self, num_classes=3):
+        super(CustomResNet, self).__init__()
+        # Load pre-trained ResNet model
+        self.model = models.resnet18(pretrained=False)
         
-        # Initialize with fixed weights
-        torch.manual_seed(42)
-        self.init_weights()
-    
-    def init_weights(self):
-        nn.init.normal_(self.conv.weight, mean=0.0, std=0.01)
-        nn.init.zeros_(self.conv.bias)
-        nn.init.normal_(self.fc.weight, mean=0.0, std=0.01)
-        nn.init.zeros_(self.fc.bias)
+        # Modify the final layer for our number of classes
+        num_ftrs = self.model.fc.in_features
+        self.model.fc = nn.Linear(num_ftrs, num_classes)
 
     def forward(self, x):
-        x = self.pool(torch.relu(self.conv(x)))
-        x = x.view(-1, 16 * 32 * 32)
-        x = self.fc(x)
-        return x
+        return self.model(x)
+
+def load_model():
+    model = CustomResNet(num_classes=len(CLASSES))
+    # Initialize model weights deterministically
+    torch.manual_seed(42)
+    for param in model.parameters():
+        if len(param.shape) > 1:  # For weight matrices
+            nn.init.xavier_uniform_(param)
+        else:  # For bias vectors
+            nn.init.zeros_(param)
+    model.eval()
+    return model
 
 # Global model variable
 _model = None
@@ -45,8 +50,7 @@ def get_model():
     """Get or initialize the model."""
     global _model
     if _model is None:
-        _model = SimpleNet()
-        _model.eval()
+        _model = load_model()
     return _model
 
 def predict_image(image_path):
