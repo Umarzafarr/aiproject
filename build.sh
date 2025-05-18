@@ -5,12 +5,8 @@ set -o errexit
 # Install Python dependencies
 python -m pip install --upgrade pip
 
-# Force using pre-built wheels, no compilation
-pip install --only-binary=:all: numpy==1.19.5
-pip install --only-binary=:all: scikit-learn==0.24.2
-
-# Install other requirements
-pip install --no-cache-dir -r requirements.txt
+# Install requirements with pre-built wheels
+pip install --no-cache-dir --only-binary=:all: -r requirements.txt
 
 # Create necessary directories and copy files
 mkdir -p build
