@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: fruit-classifier
+    env: python
+    buildCommand: ./build.sh
+    startCommand: gunicorn --bind 0.0.0.0:$PORT api.index:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.12
+    plan: free 

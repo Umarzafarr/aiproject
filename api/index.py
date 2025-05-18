@@ -62,7 +62,6 @@ def predict():
         print(f"Error during prediction: {str(e)}")  # Add logging
         return jsonify({'error': str(e)}), 500
 
-# For local development
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 3000))
     print(f"Starting server at http://localhost:{port}")
