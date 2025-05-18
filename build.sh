@@ -2,8 +2,14 @@
 # exit on error
 set -o errexit
 
+# Upgrade pip and install build dependencies
 python -m pip install --upgrade pip
+python -m pip install --upgrade setuptools wheel
+
+# Install gunicorn first
 pip install gunicorn
+
+# Install other requirements
 pip install -r requirements.txt
 
 # Create build directory if it doesn't exist
