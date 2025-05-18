@@ -5,8 +5,9 @@
             "src": "api/index.py",
             "use": "@vercel/python",
             "config": {
-                "runtime": "python3.9",
-                "maxLambdaSize": "15mb"
+                "runtime": "python3.12",
+                "maxLambdaSize": "15mb",
+                "installCommand": "pip install -r requirements.txt"
             }
         }
     ],
@@ -15,5 +16,8 @@
             "src": "/(.*)",
             "dest": "api/index.py"
         }
-    ]
+    ],
+    "env": {
+        "PYTHONUNBUFFERED": "1"
+    }
 } 
